@@ -71,8 +71,6 @@ python3 tests/test_03_flat_bands.py theta
 
 - Python 3.9+
 - NumPy, SciPy
-- st_foam_scattering (for FDTD infrastructure: fdtd_foam.py, gauge_foam.py)
-- st_dec (for builders: voronoi_scan.py, random_graphs.py)
 
 ## License
 
