@@ -10,6 +10,7 @@ Tests:
   test_ndirs_partial_corr   — T6.6: partial correlation ρ(n_dirs, ⟨r⟩ | Σv²)
   test_ndirs_overlap        — T6.7: n_dirs overlap crystal/random (structural continuum)
   test_complex_crystal_in_random_ci — T6.8: beta_mn ⟨r⟩ within random ± 2σ
+  test_ndirs_scaling                — T6.11: Σv² vs n_dirs, saturates at n_dirs ≥ dim
 
   NOT in this file:
   - θ-scan with ⟨r⟩ FDTD (continuous on same graph): future work.
@@ -29,7 +30,9 @@ RAW OUTPUT (24 Mar 2026):
   T6.7: n_dirs crystal [4,286] overlaps random [185,196]. Structural continuum. PASS.
   T6.8: beta_mn z-score=-0.61 within random ±2σ. Statistically in random regime. PASS.
 
-  8/8 PASS (50.9s)
+  T6.11: n_dirs=2→50: Σv² 0.0002→0.00003, saturates at n_dirs≥3. All << crystal. PASS.
+
+  9/9 PASS
 
 Date: 24 Mar 2026
 """

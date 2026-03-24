@@ -15,6 +15,7 @@ Tests:
   test_modes_extended       — T3.9: IPR ≈ 1/nv (not Anderson)
   test_geometric_vs_random  — T3.10: geometric dirs ≈ random dirs (ratio 0.5-2.0)
   test_theta_scan_causal    — T3.11: Σv² decreases monotonically with direction noise
+  test_shuffle_assignment   — T3.16: same dir SET, shuffled assignment → dead
 
 RAW OUTPUT (24 Mar 2026):
 
@@ -33,8 +34,9 @@ RAW OUTPUT (24 Mar 2026):
   T3.13: fflat multi-k — z=4 worst case: fflat=0.990 on all 5 k-dirs.
          Consistency verified: local calc = compute_sv2_from_mesh (identical). PASS.
   T3.14: IPR multi-k — IPR×nv ∈ [2.72, 3.02] on 5 k-values. Extended at all k. PASS.
+  T3.16: Shuffle assignment — same 6 dirs, random mapping → 0.84% of crystal ≈ random. PASS.
 
-  14/14 PASS (72.5s)
+  15/15 PASS
 
 Date: 24 Mar 2026
 """
