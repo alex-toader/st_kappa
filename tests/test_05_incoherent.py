@@ -111,15 +111,16 @@ def test_mr_independent_nv():
     nvs, mrs = [], []
     for n_seeds in [6, 8, 10, 12, 15, 18, 20, 25, 30, 35]:
         seed_mrs = []
+        last_nv = 0
         for seed in range(10):
             m = build_structure('random_z4', n_seeds=n_seeds, seed=seed)
             V = np.array(m['V'])
+            last_nv = len(V)
             mr, _ = measure_mr(V, m['E'], m['L'])
             if mr is not None:
                 seed_mrs.append(mr)
         if seed_mrs:
-            nv = len(build_structure('random_z4', n_seeds=n_seeds, seed=0)['V'])
-            nvs.append(nv)
+            nvs.append(last_nv)
             mrs.append(np.mean(seed_mrs))
             print(f"  n_seeds={n_seeds:3d}: nv={nv:4d}, ⟨r⟩={np.mean(seed_mrs):.3f} "
                   f"± {np.std(seed_mrs):.3f} (n={len(seed_mrs)})")
@@ -598,21 +599,19 @@ def test_phase_independence():
     m = build_structure('random_z4', seed=0)
     V = np.array(m['V'])
 
-    # measure_mr averages over k=(0.3,0.5,1.0) along x.
-    # Compare with k along y and z.
-    mr_x, _ = measure_mr(V, m['E'], m['L'], k_values=(0.5,))
-    # For y and z: measure_mr always uses k=[k,0,0]. We can't easily
-    # change direction. Instead, test different k magnitudes as phase proxy.
+    # Different k magnitudes produce different phase patterns at the defect.
+    # ⟨r⟩ should be stable across k (not dominated by specific interference).
     mrs = []
     for k in [0.2, 0.4, 0.6, 0.8, 1.0, 1.2]:
         mr, _ = measure_mr(V, m['E'], m['L'], k_values=(k,))
         if mr: mrs.append(mr)
         print(f"  k={k:.1f}: ⟨r⟩={mr:.3f}" if mr else f"  k={k:.1f}: None")
 
+    assert len(mrs) >= 4, f"Need ≥4 valid k-values: got {len(mrs)}"
     cv = np.std(mrs) / np.mean(mrs)
-    print(f"\n  ⟨r⟩ across 6 k-values: mean={np.mean(mrs):.3f}, CV={cv:.1%}")
+    print(f"\n  ⟨r⟩ across {len(mrs)} k-values: mean={np.mean(mrs):.3f}, CV={cv:.1%}")
 
-    assert cv < 0.20, f"⟨r⟩ should be stable across phases: CV={cv:.1%}"
+    assert cv < 0.15, f"⟨r⟩ should be stable across phases: CV={cv:.1%}"
     print(f"  Time: {time.time()-t0:.1f}s. PASS.")
 
 

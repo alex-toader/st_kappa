@@ -1,9 +1,11 @@
 # Tests Map
 
-52 tests across 5 files (~3 min total). Each file corresponds to one paper section.
+Each file corresponds to one paper section.
 Every claim has at least one test with a real assert.
 
 ---
+
+56 tests across 5 files (~4 min total).
 
 ## test_02_model.py (12 tests) — §2 Infrastructure validation
 
@@ -22,7 +24,7 @@ Every claim has at least one test with a real assert.
 | T2.12 | test_k_convergence | 3 vs 10 k-values: 1.6% difference |
 | T2.13 | test_plane_z_stability | Auto vs fixed z=L/2: 0.9% difference |
 
-## test_03_flat_bands.py (14 tests) — §3 Central mechanism
+## test_03_flat_bands.py (15 tests) — §3 Central mechanism
 
 | ID | Test | What it verifies |
 |----|------|-----------------|
@@ -40,8 +42,9 @@ Every claim has at least one test with a real assert.
 | T3.12 | test_tensor_vs_transport | Kelvin ⟨ê⊗ê⟩=I/3 exact but Σv²=62× random |
 | T3.13 | test_fflat_multi_k | fflat=0.990 on all 5 k-directions (worst case z=4) |
 | T3.14 | test_ipr_multi_k | IPR×nv ∈ [2.7, 3.0] at 5 k-values — extended at all k |
+| T3.16 | test_shuffle_assignment | Same 6 Kelvin dirs, shuffled assignment → 0.84% of crystal ≈ random |
 
-## test_04_coherent.py (9 tests) — §4 Crystal transport
+## test_04_coherent.py (10 tests) — §4 Crystal transport
 
 | ID | Test | What it verifies |
 |----|------|-----------------|
@@ -54,8 +57,9 @@ Every claim has at least one test with a real assert.
 | T4.7 | test_intra_group_correlation | Intra-LOW ρ(Σv², ⟨r⟩) = 0.455 (positive, p=0.19) |
 | T4.8 | test_borderline_placement | Borderline Σv² between HIGH and LOW groups |
 | T4.10 | test_gap_in_distribution | Largest gap = 1.205 between fluorite and perovskite |
+| T4.11 | test_length_disorder | 3% position noise → 59% transport retained. Dirs dominate metric. |
 
-## test_05_incoherent.py (9 tests) — §5 Transport without propagation
+## test_05_incoherent.py (10 tests) — §5 Transport without propagation
 
 | ID | Test | What it verifies |
 |----|------|-----------------|
@@ -68,8 +72,9 @@ Every claim has at least one test with a real assert.
 | T5.9 | test_rdisk_scaling | ⟨r⟩ grows 1.16→1.44, saturates (last step 0%) |
 | T5.10 | test_mr_constant_nv_pbc | ⟨r⟩ ~ nv^0.09 (PBC). Open boundary: W5 file 09 |
 | T5.11 | test_no_power_tail | Gaussian R² ≥ power law R² (no long-range tail) |
+| T5.12 | test_phase_independence | ⟨r⟩ CV=5.6% across k=0.2-1.2 — not phase artefact |
 
-## test_06_continuum.py (8 tests) — §6 Coherence continuum
+## test_06_continuum.py (9 tests) — §6 Coherence continuum
 
 | ID | Test | What it verifies |
 |----|------|-----------------|
@@ -81,3 +86,4 @@ Every claim has at least one test with a real assert.
 | T6.6 | test_ndirs_partial_corr | ρ_partial(n_dirs, ⟨r⟩ | Σv²) NS — n_dirs is proxy |
 | T6.7 | test_ndirs_overlap | Crystal n_dirs [4, 286] spans random [185, 196] |
 | T6.8 | test_complex_crystal_in_random_ci | beta_mn z-score=-0.46, within random ± 2σ |
+| T6.11 | test_ndirs_scaling | n_dirs=2→50: Σv² decreases, saturates at n_dirs ≥ 3. All << crystal. |

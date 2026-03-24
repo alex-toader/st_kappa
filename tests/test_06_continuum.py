@@ -349,14 +349,15 @@ def test_ndirs_overlap():
     print(f"  Crystal n_dirs: [{min(c_dirs)}, {max(c_dirs)}]")
     print(f"  Random  n_dirs: [{min(r_dirs)}, {max(r_dirs)}]")
 
-    # Crystal n_dirs spans from few (4) to many (286), encompassing random range.
-    # This shows direction diversity varies continuously across structures.
+    # Crystal n_dirs covers a wider range than random — from far below (fcc: 4)
+    # to above (alpha_mn: 286). This shows direction diversity varies continuously
+    # across structures, not in discrete bins.
     assert min(c_dirs) < min(r_dirs), \
-        f"Crystal min should be below random: {min(c_dirs)} vs {min(r_dirs)}"
+        f"Some crystals should have fewer dirs than random: {min(c_dirs)} vs {min(r_dirs)}"
     assert max(c_dirs) > max(r_dirs), \
-        f"Crystal max should exceed random: {max(c_dirs)} vs {max(r_dirs)}"
-    print(f"  Crystal range [{min(c_dirs)}, {max(c_dirs)}] spans random [{min(r_dirs)}, {max(r_dirs)}].")
-    print(f"  Direction diversity varies continuously across structures.")
+        f"Some crystals should have more dirs than random: {max(c_dirs)} vs {max(r_dirs)}"
+    print(f"  Crystal range [{min(c_dirs)}, {max(c_dirs)}] wider than random [{min(r_dirs)}, {max(r_dirs)}].")
+    print(f"  Directional diversity varies continuously — not discrete categories.")
     print(f"  Time: {time.time()-t0:.1f}s. PASS.")
 
 
@@ -422,9 +423,9 @@ def test_ndirs_scaling():
             rng = np.random.RandomState(seed)
             V = (rng.rand(nv, 3) * L).tolist()
 
-            # Build z≈4 graph from nearest neighbors
+            # Build z≈4 graph from nearest neighbors (no duplicate edges)
             V_arr = np.array(V)
-            E = []
+            edge_set = set()
             adj = [set() for _ in range(nv)]
             for i in range(nv):
                 dists = []
@@ -435,10 +436,13 @@ def test_ndirs_scaling():
                         dists.append((np.linalg.norm(dr), j))
                 dists.sort()
                 for _, j in dists[:4]:
-                    if j not in adj[i]:
+                    e = (min(i, j), max(i, j))
+                    if e not in edge_set:
                         adj[i].add(j)
                         adj[j].add(i)
-                        E.append([min(i, j), max(i, j)])
+                        edge_set.add(e)
+            E = [list(e) for e in edge_set]
+            assert len(E) >= nv, f"Graph too sparse: {len(E)} edges, {nv} vertices"
 
             # Generate n_dirs directions, assign cyclically
             rng2 = np.random.RandomState(seed + 1000)

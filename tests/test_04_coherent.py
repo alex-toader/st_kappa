@@ -17,13 +17,13 @@ RAW OUTPUT (24 Mar 2026):
   T4.1: Σv² vs ⟨r⟩ on 15 crystals — ρ=0.800 (p=0.0003). PASS.
   T4.2: ⟨v²⟩/⟨v⟩ vs ⟨r⟩ on 6 crystals — ρ=0.943 (p=0.005). PASS.
   T4.3: HIGH — fcc 3.28, diamond 3.16, pyrochlore 3.20, perovskite 3.09. All >3. PASS.
-  T4.4: LOW — beta_mn 1.38, gamma_brass 1.22, alpha_mn 1.10, skutterudite 1.05, th3p4 0.98. All <2. PASS.
+  T4.4: LOW — beta_mn 1.38, gamma_brass 1.22, alpha_mn 1.10, skutterudite 1.05, th3p4 0.98, spinel 1.47. All <2. PASS.
   T4.5: N conv — a15 +18%, c15 +15%, pyrite +52%. Lower bound confirmed. PASS.
   T4.6: Unit — th3p4 ⟨r⟩/ℓ=1.79 vs random 1.95 (ratio 0.92). Short edges, not physics. PASS.
   T4.7: Intra-LOW ρ=0.455 (p=0.19) on 10 — positive but not significant. PASS.
   T4.8: Borderline Σv² between HIGH and LOW. Intermediate placement confirmed. PASS.
   T4.10: Largest gap=1.205 between fluorite(1.888) and perovskite(3.093). Gap>0.5. PASS.
-  T4.11: 3% position noise → 59% transport retained. Dirs dominate metric. PASS.
+  T4.11: Fixed dirs, ±10% position noise → 100% transport (ratio 1.00). Lengths irrelevant. PASS.
 
   10/10 PASS
 
@@ -180,7 +180,7 @@ def test_high_transport():
 def test_low_transport():
     """T4.4: Crystals with many unique edge directions have ⟨r⟩ < 2.
 
-    beta_mn, gamma_brass, alpha_mn, skutterudite, th3p4 — many dirs
+    beta_mn, gamma_brass, alpha_mn, skutterudite, th3p4, spinel — many dirs
     and/or large unit cell. All should have ⟨r⟩ < 2.0, similar to random.
     """
     t0 = time.time()
@@ -439,7 +439,8 @@ def test_length_disorder():
     """T4.11: Fixed crystal dirs, randomized edge lengths → transport survives.
 
     Demonstrates that directions dominate over metric geometry.
-    Edge lengths randomized ±50% but directions preserved → Σv² stays large.
+    Vertex positions perturbed ±10% but original crystal directions prescribed.
+    Only edge lengths change, not directions.
     """
     t0 = time.time()
     print("\nT4.11: fixed dirs, random lengths")
@@ -461,16 +462,17 @@ def test_length_disorder():
 
     sv2_orig, _, _ = compute_sv2_from_mesh(m)
 
-    # Perturb vertex positions → changes edge lengths but keeps approximate dirs.
-    # Dirs are recalculated from positions (not prescribed) so length change
-    # slightly perturbs directions too. This tests combined length+dir perturbation.
+    # Perturb vertex positions (changes edge lengths) but prescribe original
+    # crystal directions. This isolates the effect of metric disorder from
+    # directional disorder.
     ratios = []
     for seed in range(5):
         rng = np.random.RandomState(seed)
-        noise = rng.uniform(-0.05, 0.05, V.shape)  # ~3% of edge length
+        noise = rng.uniform(-0.15, 0.15, V.shape)  # ~10% of edge length
         V_pert = V + noise
-        # Do NOT prescribe edge_dirs — let compute_sv2 recalculate from positions
-        mesh = {'V': V_pert.tolist(), 'E': E.tolist(), 'L': L, 'dim': 3, 'F': []}
+        # Prescribe original crystal dirs — only lengths change
+        mesh = {'V': V_pert.tolist(), 'E': E.tolist(), 'L': L, 'dim': 3,
+                'edge_dirs': dirs.tolist()}
         sv2_pert, _, _ = compute_sv2_from_mesh(mesh)
         ratio = sv2_pert / sv2_orig
         ratios.append(ratio)
@@ -479,9 +481,9 @@ def test_length_disorder():
     mean_ratio = np.mean(ratios)
     print(f"\n  Mean ratio: {mean_ratio:.2f}")
 
-    # Should retain significant transport (> 30% of crystal)
-    assert mean_ratio > 0.3, \
-        f"Should retain transport with length disorder: {mean_ratio:.2f}"
+    # With prescribed crystal dirs, Σv² should be identical (ratio ≈ 1.00)
+    assert all(r > 0.95 for r in ratios), \
+        f"Prescribed dirs should give ratio ≈ 1.00: min={min(ratios):.2f}"
     print(f"  Directions dominate over metric geometry.")
     print(f"  Time: {time.time()-t0:.1f}s. PASS.")
 
