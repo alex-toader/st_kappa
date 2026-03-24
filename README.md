@@ -1,4 +1,4 @@
-# st_kappa
+# st_kappa [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19209385.svg)](https://doi.org/10.5281/zenodo.19209385) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19209386.svg)](https://doi.org/10.5281/zenodo.19209386)
 
 Directional coherence controls elastic wave transport on discrete structures.
 
