@@ -396,6 +396,83 @@ def test_complex_crystal_in_random_ci():
     print(f"  Time: {time.time()-t0:.1f}s. PASS.")
 
 
+# ── T6.11 ────────────────────────────────────────────────────
+
+def test_ndirs_scaling():
+    """T6.11: Controlled n_dirs scaling on abstract graphs.
+
+    Build random z≈4 graphs with exactly n_dirs directions assigned cyclically.
+    Σv² should decrease with n_dirs and saturate at n_dirs ≥ dim (3 in 3D).
+    All values should be << crystal (where periodic assignment matters).
+    """
+    t0 = time.time()
+    print("\nT6.11: Σv² vs n_dirs (controlled scaling)")
+    print("-" * 60)
+
+    L = 4.0
+    nv = 100
+    results = []
+
+    for n_dirs in [2, 3, 6, 10, 50]:
+        sv2s = []
+        for seed in range(5):
+            rng = np.random.RandomState(seed)
+            V = (rng.rand(nv, 3) * L).tolist()
+
+            # Build z≈4 graph from nearest neighbors
+            V_arr = np.array(V)
+            E = []
+            adj = [set() for _ in range(nv)]
+            for i in range(nv):
+                dists = []
+                for j in range(nv):
+                    if i != j:
+                        dr = V_arr[j] - V_arr[i]
+                        dr -= L * np.round(dr / L)
+                        dists.append((np.linalg.norm(dr), j))
+                dists.sort()
+                for _, j in dists[:4]:
+                    if j not in adj[i]:
+                        adj[i].add(j)
+                        adj[j].add(i)
+                        E.append([min(i, j), max(i, j)])
+
+            # Generate n_dirs directions, assign cyclically
+            rng2 = np.random.RandomState(seed + 1000)
+            dir_set = []
+            for _ in range(n_dirs):
+                d = rng2.randn(3)
+                d /= np.linalg.norm(d)
+                dir_set.append(d.tolist())
+
+            edge_dirs = [dir_set[ei % n_dirs] for ei in range(len(E))]
+            mesh = {'V': V, 'E': E, 'L': L, 'dim': 3, 'edge_dirs': edge_dirs}
+            sv2, _, _ = compute_sv2_from_mesh(mesh)
+            sv2s.append(sv2)
+
+        mean_sv2 = np.mean(sv2s)
+        results.append((n_dirs, mean_sv2))
+        print(f"  n_dirs={n_dirs:3d}: Σv²={mean_sv2:.6f}")
+
+    # Σv² should decrease from n_dirs=2 to n_dirs=3
+    assert results[0][1] > results[1][1], \
+        f"Σv² should decrease 2→3 dirs: {results[0][1]:.6f} vs {results[1][1]:.6f}"
+
+    # All should be << crystal (Kelvin Σv² ≈ 0.017)
+    assert all(r[1] < 0.001 for r in results), \
+        f"All should be << crystal: max={max(r[1] for r in results):.6f}"
+
+    # Saturation: n_dirs=6 ≈ n_dirs=50 (within 2×)
+    sv2_6 = [r[1] for r in results if r[0] == 6][0]
+    sv2_50 = [r[1] for r in results if r[0] == 50][0]
+    assert 0.3 < sv2_6 / sv2_50 < 3.0, \
+        f"Should saturate at n_dirs>dim: {sv2_6:.6f} vs {sv2_50:.6f}"
+
+    print(f"\n  Σv² decreases with n_dirs, saturates at n_dirs ≥ dim.")
+    print(f"  All << crystal — random assignment kills transport regardless of n_dirs.")
+    print(f"  Time: {time.time()-t0:.1f}s. PASS.")
+
+
 # ── Main ─────────────────────────────────────────────────────
 
 TESTS = [
@@ -407,6 +484,7 @@ TESTS = [
     ('partial', test_ndirs_partial_corr),
     ('ndirs_ov', test_ndirs_overlap),
     ('ci', test_complex_crystal_in_random_ci),
+    ('ndirs_sc', test_ndirs_scaling),
 ]
 
 if __name__ == '__main__':

@@ -803,6 +803,56 @@ def test_ipr_multi_k():
     print(f"  Modes extended at all k. Time: {time.time()-t0:.1f}s. PASS.")
 
 
+# ── T3.16 ────────────────────────────────────────────────────
+
+def test_shuffle_assignment():
+    """T3.16: Same direction SET, shuffled assignment → transport dies.
+
+    Keep Kelvin's 6 directions but randomly reassign which edge gets which.
+    If shuffled ≈ random dirs → spatial pattern (periodic assignment) is
+    the key, not the direction set itself.
+
+    This is the most direct test of spatial coherence as the mechanism.
+    """
+    t0 = time.time()
+    print("\nT3.16: shuffle direction assignment (same set, random mapping)")
+    print("-" * 60)
+
+    _, V, E, L, base_dirs = _crystal_mesh_with_dirs('bcc')
+    sv2_orig = _sv2_with_dirs(V, E, L, base_dirs)
+
+    shuffled_sv2s = []
+    for seed in range(5):
+        rng = np.random.RandomState(seed)
+        perm = rng.permutation(len(base_dirs))
+        shuffled = base_dirs[perm]
+        sv2_s = _sv2_with_dirs(V, E, L, shuffled)
+        shuffled_sv2s.append(sv2_s)
+        print(f"  seed={seed}: Σv²={sv2_s:.6f} ({sv2_s/sv2_orig:.4f} of crystal)")
+
+    # Random dirs for comparison
+    rng = np.random.RandomState(42)
+    rand_dirs = rng.randn(len(E), 3)
+    rand_dirs = rand_dirs / np.linalg.norm(rand_dirs, axis=1, keepdims=True)
+    sv2_rand = _sv2_with_dirs(V, E, L, rand_dirs)
+
+    mean_shuf = np.mean(shuffled_sv2s)
+    print(f"\n  Crystal (periodic): Σv²={sv2_orig:.6f}")
+    print(f"  Shuffled (same set): Σv²={mean_shuf:.6f} ({mean_shuf/sv2_orig:.4f})")
+    print(f"  Random dirs:         Σv²={sv2_rand:.6f} ({sv2_rand/sv2_orig:.4f})")
+
+    # Shuffled should be ~same as random (both dead)
+    assert mean_shuf < sv2_orig * 0.02, \
+        f"Shuffled should be << crystal: {mean_shuf/sv2_orig:.4f}"
+    # Shuffled ≈ random (within 3×)
+    assert 0.3 < mean_shuf / sv2_rand < 3.0, \
+        f"Shuffled should ≈ random: {mean_shuf:.6f} vs {sv2_rand:.6f}"
+
+    print(f"\n  Same directions, shuffled assignment → dead.")
+    print(f"  Spatial pattern (periodic assignment) is the key, not direction set.")
+    print(f"  Time: {time.time()-t0:.1f}s. PASS.")
+
+
 # ── Main ─────────────────────────────────────────────────────
 
 TESTS = [
@@ -820,6 +870,7 @@ TESTS = [
     ('tensor_vs', test_tensor_vs_transport),
     ('fflat_mk', test_fflat_multi_k),
     ('ipr_mk', test_ipr_multi_k),
+    ('shuffle', test_shuffle_assignment),
 ]
 
 if __name__ == '__main__':
